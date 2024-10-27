@@ -89,13 +89,13 @@ class BLNET(object):
                 data["analog"] = self._convert_web(blnet_session.read_analog_values())
                 data["digital"] = self._convert_web(blnet_session.read_digital_values())
         if self.blnet_direct:
-            direct = self.blnet_direct.get_latest(self.max_retries)[0]
+            direct = self.blnet_direct.get_latest(self.max_retries)[node or 0]
             # Override values for analog and digital as values are
             # expected to be more precise here
             for domain in ["analog", "digital"]:
                 for id, value in direct[domain].items():
-                    if data[domain].get(id) is not None:
-                        data[domain][id]["value"] = value
+                    if direct[domain].get(id) is not None:
+                        data[domain].setdefault(id, {})["value"] = value
             for domain in ["speed", "energy", "power"]:
                 for id, value in direct[domain].items():
                     if value is None:

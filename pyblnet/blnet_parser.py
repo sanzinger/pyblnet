@@ -78,19 +78,21 @@ class BLNETParser:
         for channel in range(0, 16):
             self.digital[channel + 1] = self._convert_digital(digital, channel)
 
+        def round_checked(value, digits=0):
+            return round(value, digits) if value is not None else None
         self.speed = {}
         for channel in range(0, 4):
-            self.speed[channel + 1] = round(self._convert_speed(speed[channel]), 3)
+            self.speed[channel + 1] = round_checked(self._convert_speed(speed[channel]), 3)
 
         self.energy = {}
         for channel in range(0, 2):
-            self.energy[channel + 1] = round(
+            self.energy[channel + 1] = round_checked(
                 self._convert_energy(MWh[channel], kWh[channel], active, channel), 3
             )
 
         self.power = {}
         for channel in range(0, 2):
-            self.power[channel + 1] = round(
+            self.power[channel + 1] = round_checked(
                 self._convert_power(power[channel], active, channel), 3
             )
 
