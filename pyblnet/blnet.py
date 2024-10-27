@@ -89,7 +89,7 @@ class BLNET(object):
                 data["analog"] = self._convert_web(blnet_session.read_analog_values())
                 data["digital"] = self._convert_web(blnet_session.read_digital_values())
         if self.blnet_direct:
-            direct = self.blnet_direct.get_latest(self.max_retries)[node or 0]
+            direct = self.blnet_direct.get_latest(self.max_retries, [node])[node]
             # Override values for analog and digital as values are
             # expected to be more precise here
             for domain in ["analog", "digital"]:

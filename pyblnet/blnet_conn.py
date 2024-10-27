@@ -305,7 +305,7 @@ class BLNETDirect(object):
         self._address = None
         self._disconnect()
 
-    def get_latest(self, max_retries=MAX_RETRYS):
+    def get_latest(self, max_retries=MAX_RETRYS, query_frames=None):
         """
         Fetch latest (current) data from the BLNet
         @throws checksum error
@@ -314,11 +314,13 @@ class BLNETDirect(object):
         """
         self._connect()
         self.get_count()
+        if query_frames is None:
+            query_frames = range(0, self._can_frames)
         frames = {}
         info = {"sleep": {}, "got": {}}
 
-        # for all frames
-        for frame in range(0, self._can_frames):
+        # for all (requested) frames
+        for frame in query_frames:
             # build command
             command = struct.pack("<2B", GET_LATEST, frame + 1)
             # try 4 times
