@@ -175,8 +175,9 @@ class BLNETDirect(object):
         """
         Disconnect from bootloader via TCP
         """
-        self._socket.close()
+        s = self._socket
         self._socket = None
+        s.close()
 
     def _query(self, command, length):
         """
@@ -187,17 +188,20 @@ class BLNETDirect(object):
         @throws ConnectionError error when querying
         @return Binary: byte string
         """
-        if len(command) == self._socket.send(command):
-            data = b""
-            # get response until length or less than 32 bytes
-            while True:
-                data += self._socket.recv(length)
-                if len(data) <= 32 or len(data) >= length:
-                    break
-            return data
-
-        self._disconnect()
-        raise ConnectionError("Error while querying command {}".format(command))
+        try:
+            if len(command) == self._socket.send(command):
+                data = b""
+                # get response until length or less than 32 bytes
+                while True:
+                    data += self._socket.recv(length)
+                    if len(data) <= 32 or len(data) >= length:
+                        break
+                return data
+            self._disconnect()
+            raise ConnectionError("Error while querying command {}".format(command))
+        except:
+            self._disconnect()
+            raise
 
     def _start_read(self):
         """
@@ -212,6 +216,8 @@ class BLNETDirect(object):
         @param byte string $data Binary string to check
         @return boolean
         """
+        if len(data) == 0:
+            return False
         binary = struct.unpack("<{}B".format(len(data)), data)
         checksum = binary[-1]
 
