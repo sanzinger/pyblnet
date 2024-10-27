@@ -123,6 +123,7 @@ class BLNETDirect(object):
             self._count = int(self._count)
             return self._count
         else:
+            self._disconnect()
             raise ConnectionError("Could not retreive count")
 
     def _get_data(self, max_count=None):
@@ -356,6 +357,7 @@ class BLNETDirect(object):
             frames["date"] = datetime.now()
             frames["info"] = info
             return frames
+        self._disconnect()
         raise ConnectionError("Could not get latest data")
 
     def _split_latest(self, data, frame):
