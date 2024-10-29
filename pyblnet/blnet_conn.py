@@ -57,17 +57,24 @@ class BLNETDirect(object):
         self._mode = None
         self._socket = None
         self._count = None
+        self._can_frames = None
         self._check_mode()
 
-    def get_count(self):
+    def get_count(self, max_retries=MAX_RETRYS):
         """
         Get the number of datasets in the bootloader memory
         @return number of datasets in bootloader memory
         """
         if not self._count:
-            self._connect()
-            data = self._query(GET_HEADER, 21)
-
+            retry = True
+            while max_retries > 0 and retry:
+                self._connect()
+                data = self._query(GET_HEADER, 21)
+                max_retries -= 1
+                retry = data == GET_HEADER
+                if retry:
+                    self._disconnect()
+                    sleep(2)
             if self._checksum(data):
                 if self._mode == CAN_MODE:
                     frame_count = struct.unpack("<{}B".format(len(data)), data)[5]
@@ -177,8 +184,9 @@ class BLNETDirect(object):
         Disconnect from bootloader via TCP
         """
         s = self._socket
-        self._socket = None
-        s.close()
+        if s is not None:
+            self._socket = None
+            s.close()
 
     def _query(self, command, length):
         """
@@ -320,11 +328,12 @@ class BLNETDirect(object):
         @return Array of frame -> value mappings
         """
         self._connect()
-        self.get_count()
+        if self._can_frames is None:
+            self.get_count(max_retries=max_retries)
         if query_frames is None:
             query_frames = range(0, self._can_frames)
         frames = {}
-        info = {"sleep": {}, "got": {}}
+        info = {"sleep": {}, "got": {}, "timeout": {}}
 
         # for all (requested) frames
         for frame in query_frames:
@@ -350,7 +359,14 @@ class BLNETDirect(object):
                         break
             # TODO this looks suspicious
             if n == max_retries - 1:
-                frames[frame] = "timeout"
+                info["timeout"][frame] = "timeout"
+                frames[frame] = {
+                    "analog": {},
+                    "digital": {},
+                    "speed": {},
+                    "energy": {},
+                    "power": {},
+                }
             info["sleep"][frame] = sleeps
         self._end_read(True)
         if len(frames) > 0:
