@@ -369,11 +369,11 @@ class BLNETDirect(object):
                 }
             info["sleep"][frame] = sleeps
         self._end_read(True)
+        self._disconnect()
         if len(frames) > 0:
             frames["date"] = datetime.now()
             frames["info"] = info
             return frames
-        self._disconnect()
         raise ConnectionError("Could not get latest data")
 
     def _split_latest(self, data, frame):
