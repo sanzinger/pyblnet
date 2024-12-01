@@ -9,7 +9,7 @@ https://github.com/berwinter/uvr1611/blob/master/lib/backend/blnet-connection.in
 @author: Niels
 """
 from builtins import str, int
-from socket import socket, getaddrinfo, SOCK_STREAM, IPPROTO_TCP
+from socket import socket, getaddrinfo, SOCK_STREAM, IPPROTO_TCP, SO_LINGER, SOL_SOCKET
 import struct
 from time import sleep
 from datetime import datetime
@@ -172,6 +172,7 @@ class BLNETDirect(object):
             for (family, socktype, proto, _, sockaddr) in available:
                 try:
                     self._socket = socket(family, socktype, proto)
+                    self._socket.setsockopt(SOL_SOCKET, SO_LINGER, struct.pack('ii', 1, 0))
                     self._socket.connect(sockaddr)
                     break
                 except:
@@ -351,7 +352,7 @@ class BLNETDirect(object):
                         sleeps.append(binary[1])
                         self._disconnect()
                         # wait some seconds
-                        sleep(binary[1])
+                        sleep(2)
                         self._connect()
                     else:
                         info["got"][frame] = n
